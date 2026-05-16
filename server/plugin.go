@@ -16,9 +16,10 @@ import (
 const pluginCommandTrigger = "hermes"
 
 type configuration struct {
-	HermesGatewayURL   string
-	HermesGatewayToken string
-	AllowedUserIDs     string
+	HermesAgentAPIURL string
+	HermesAgentAPIKey string
+	HermesAgentModel  string
+	AllowedUserIDs    string
 }
 
 type Plugin struct {
@@ -46,7 +47,7 @@ func (p *Plugin) OnConfigurationChange() error {
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	cfg := p.getConfiguration()
-	gw := gateway.NewClient(gateway.Config{BaseURL: cfg.HermesGatewayURL, Token: cfg.HermesGatewayToken}, nil)
+	gw := gateway.NewClient(gateway.Config{BaseURL: cfg.HermesAgentAPIURL, Token: cfg.HermesAgentAPIKey, Model: cfg.HermesAgentModel}, nil)
 	handler := command.NewHandler(command.Config{AllowedUsers: parseCSV(cfg.AllowedUserIDs)}, gw)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -75,10 +76,10 @@ func buildHermesCommand() *model.Command {
 	return &model.Command{
 		Trigger:          pluginCommandTrigger,
 		AutoComplete:     true,
-		AutoCompleteDesc: "Hermes Gateway 명령 실행",
+		AutoCompleteDesc: "Hermes Agent API 명령 실행",
 		AutoCompleteHint: "compress",
 		DisplayName:      "Hermes",
-		Description:      "Hermes Agent/Gateway 명령을 Mattermost에서 실행합니다.",
+		Description:      "Hermes Agent API를 Mattermost에서 실행합니다.",
 	}
 }
 

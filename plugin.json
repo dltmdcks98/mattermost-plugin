@@ -1,0 +1,43 @@
+{
+  "id": "dltmdcks98.hermes-slash-plugin",
+  "name": "Hermes Slash Command Plugin",
+  "description": "Mattermost slash command plugin that bridges Mattermost commands to Hermes Gateway commands.",
+  "homepage_url": "http://192.168.50.20:3000/dltmdcks98/mattermost-hermes-slash-plugin",
+  "support_url": "http://192.168.50.20:3000/dltmdcks98/mattermost-hermes-slash-plugin/issues",
+  "release_notes_url": "http://192.168.50.20:3000/dltmdcks98/mattermost-hermes-slash-plugin/releases",
+  "icon_path": "assets/icon.svg",
+  "version": "0.1.0",
+  "min_server_version": "9.0.0",
+  "server": {
+    "executables": {
+      "darwin-amd64": "server/dist/plugin-darwin-amd64",
+      "darwin-arm64": "server/dist/plugin-darwin-arm64",
+      "linux-amd64": "server/dist/plugin-linux-amd64"
+    }
+  },
+  "settings_schema": {
+    "header": "Hermes Gateway 연결 설정",
+    "footer": "AllowedUserIDs를 비워두면 모든 사용자가 /hermes 명령을 사용할 수 있습니다.",
+    "settings": [
+      {
+        "key": "HermesGatewayURL",
+        "display_name": "Hermes Gateway URL",
+        "type": "text",
+        "help_text": "Hermes Gateway base URL. 예: http://127.0.0.1:8080",
+        "placeholder": "http://127.0.0.1:8080"
+      },
+      {
+        "key": "HermesGatewayToken",
+        "display_name": "Hermes Gateway Token",
+        "type": "generated",
+        "help_text": "Hermes Gateway 호출에 사용할 Bearer token입니다. 로그/응답에는 노출하지 않습니다."
+      },
+      {
+        "key": "AllowedUserIDs",
+        "display_name": "Allowed User IDs",
+        "type": "text",
+        "help_text": "쉼표로 구분한 Mattermost user ID allowlist입니다. 비워두면 전체 허용입니다."
+      }
+    ]
+  }
+}

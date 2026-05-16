@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Hermes">
+  <rect width="128" height="128" rx="28" fill="#1e1f29"/>
+  <path d="M29 76c22-6 44-6 66 0" fill="none" stroke="#7dd3fc" stroke-width="10" stroke-linecap="round"/>
+  <path d="M39 49h50l-9 34H48z" fill="none" stroke="#f8fafc" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M47 41 34 25M81 41l13-16" stroke="#facc15" stroke-width="8" stroke-linecap="round"/>
+</svg>

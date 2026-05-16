@@ -20,7 +20,7 @@ bundle: clean build
 	mkdir -p $(BUNDLE_DIR)/assets $(BUNDLE_DIR)/server/dist
 	cp assets/icon.svg $(BUNDLE_DIR)/assets/icon.svg
 	cp server/dist/plugin-* $(BUNDLE_DIR)/server/dist/
-	tar -C dist -czf $(BUNDLE_FILE) $(PLUGIN_ID)
+	tar -C $(BUNDLE_DIR) -czf $(BUNDLE_FILE) plugin.json assets server
 	@echo $(BUNDLE_FILE)
 
 clean:

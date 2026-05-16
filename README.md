@@ -27,3 +27,5 @@ make bundle
 ```
 
 번들 산출물은 `dist/dltmdcks98.hermes-slash-plugin.tar.gz`에 생성됩니다.
+
+> Mattermost 업로드용 tar.gz는 압축 해제 직후 루트에 `plugin.json`이 있어야 합니다. `make bundle` 산출물을 그대로 업로드하세요.

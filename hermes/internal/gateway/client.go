@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"code.dltmdcks98.local/mattermost-hermes-slash-plugin/internal/command"
+	"code.dltmdcks98.local/mattermost-plugin/hermes/internal/command"
 )
 
 const defaultHermesModel = "hermes-agent"
@@ -52,8 +52,9 @@ func NewClient(config Config, httpClient *http.Client) *Client {
 }
 
 func (c *Client) Execute(ctx context.Context, cmd command.GatewayCommand) (command.GatewayResult, error) {
-	if cmd.Name != "compress" {
-		return command.GatewayResult{}, fmt.Errorf("unsupported gateway command: %s", cmd.Name)
+	prompt := strings.TrimSpace(cmd.Name)
+	if prompt == "" {
+		return command.GatewayResult{}, fmt.Errorf("empty hermes command")
 	}
 
 	payload, err := json.Marshal(chatCompletionRequest{
@@ -68,7 +69,7 @@ Do not expose secrets. If tool access is unavailable, explain the exact missing 
 			},
 			{
 				Role:    "user",
-				Content: buildCompressPrompt(cmd),
+				Content: buildCommandPrompt(cmd, prompt),
 			},
 		},
 	})
@@ -144,17 +145,17 @@ func sessionKey(cmd command.GatewayCommand) string {
 	return "mattermost:" + channelID + ":" + rootID
 }
 
-func buildCompressPrompt(cmd command.GatewayCommand) string {
+func buildCommandPrompt(cmd command.GatewayCommand, prompt string) string {
 	rootID := strings.TrimSpace(cmd.RootID)
 	if rootID == "" {
 		rootID = "현재 채널의 최근 대화"
 	}
-	return fmt.Sprintf(strings.TrimSpace(`Mattermost slash command /hermes compress was invoked.
+	return fmt.Sprintf(strings.TrimSpace(`Mattermost slash command /hermes %s was invoked.
 
 Context identifiers:
 - user_id: %s
 - channel_id: %s
 - root_id/thread_id: %s
 
-Please use available Mattermost/session tools if present to summarize or compress the relevant Mattermost thread/conversation. If direct Mattermost retrieval is not available in this API-server toolset, say that API access is connected but Mattermost read tooling is not available yet, and include these identifiers for follow-up.`), cmd.UserID, cmd.ChannelID, rootID)
+Execute the user's Mattermost slash command request as Hermes Agent. Use available tools when needed and allowed. If direct Mattermost retrieval is not available in this API-server toolset, say that API access is connected but Mattermost read tooling is not available yet, and include these identifiers for follow-up.`), prompt, cmd.UserID, cmd.ChannelID, rootID)
 }

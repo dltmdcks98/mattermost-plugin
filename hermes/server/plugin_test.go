@@ -42,7 +42,7 @@ func TestBuildHermesCommand(t *testing.T) {
 	if !cmd.AutoComplete {
 		t.Fatal("AutoComplete = false, want true")
 	}
-	if cmd.AutoCompleteHint != "compress" {
+	if cmd.AutoCompleteHint != "<명령어 또는 질문>" {
 		t.Fatalf("AutoCompleteHint = %q", cmd.AutoCompleteHint)
 	}
 }

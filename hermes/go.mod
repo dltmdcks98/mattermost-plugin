@@ -1,4 +1,4 @@
-module code.dltmdcks98.local/mattermost-hermes-slash-plugin
+module code.dltmdcks98.local/mattermost-plugin/hermes
 
 go 1.25.9
 

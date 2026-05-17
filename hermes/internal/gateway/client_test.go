@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"code.dltmdcks98.local/mattermost-hermes-slash-plugin/internal/command"
+	"code.dltmdcks98.local/mattermost-plugin/hermes/internal/command"
 )
 
 func TestClientPostsCompressCommandToHermesChatCompletionsAPI(t *testing.T) {
@@ -68,6 +68,38 @@ func TestClientPostsCompressCommandToHermesChatCompletionsAPI(t *testing.T) {
 		if !strings.Contains(content, want) {
 			t.Fatalf("user message missing %q: %s", want, content)
 		}
+	}
+}
+
+func TestClientPostsArbitraryHermesCommandText(t *testing.T) {
+	var gotBody map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&gotBody); err != nil {
+			t.Fatalf("decode request: %v", err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"choices":[{"message":{"role":"assistant","content":"실행 완료"}}]}`))
+	}))
+	defer server.Close()
+
+	client := NewClient(Config{BaseURL: server.URL}, server.Client())
+	result, err := client.Execute(context.Background(), command.GatewayCommand{
+		Name:      "오늘 작업 요약해줘",
+		UserID:    "user-a",
+		ChannelID: "channel-a",
+	})
+
+	if err != nil {
+		t.Fatalf("Execute returned error: %v", err)
+	}
+	if result.Message != "실행 완료" {
+		t.Fatalf("Message = %q", result.Message)
+	}
+	messages := gotBody["messages"].([]any)
+	userMsg := messages[1].(map[string]any)
+	content := userMsg["content"].(string)
+	if !strings.Contains(content, "/hermes 오늘 작업 요약해줘") {
+		t.Fatalf("user message missing arbitrary slash command: %s", content)
 	}
 }
 

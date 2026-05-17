@@ -8,7 +8,7 @@ import (
 const (
 	ResponseEphemeral = "ephemeral"
 
-	UsageText = "사용법: /hermes compress"
+	UsageText = "사용법: /hermes <명령어 또는 질문>"
 )
 
 type Config struct {
@@ -56,13 +56,13 @@ func (h *Handler) Handle(ctx context.Context, req SlashRequest) SlashResponse {
 		return ephemeral("권한이 없습니다. Hermes slash 명령을 실행할 수 없습니다.")
 	}
 
-	name := strings.Fields(strings.TrimSpace(req.Text))
-	if len(name) == 0 || name[0] != "compress" {
+	name := strings.TrimSpace(req.Text)
+	if name == "" {
 		return ephemeral(UsageText)
 	}
 
 	result, err := h.gateway.Execute(ctx, GatewayCommand{
-		Name:      "compress",
+		Name:      name,
 		UserID:    req.UserID,
 		ChannelID: req.ChannelID,
 		RootID:    req.RootID,

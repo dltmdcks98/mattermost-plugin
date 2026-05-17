@@ -71,11 +71,37 @@ func TestHandleCompressTrimsWhitespaceAndPreservesContext(t *testing.T) {
 	}
 }
 
-func TestHandleReturnsUsageForUnknownCommand(t *testing.T) {
+func TestHandleForwardsArbitraryHermesCommandText(t *testing.T) {
+	gateway := &fakeGateway{response: GatewayResult{Message: "실행 완료"}}
+	handler := NewHandler(Config{AllowedUsers: []string{"user-a"}}, gateway)
+
+	resp := handler.Handle(context.Background(), SlashRequest{
+		UserID:    "user-a",
+		ChannelID: "channel-a",
+		RootID:    "thread-root",
+		Text:      "  오늘 작업 요약해줘  ",
+	})
+
+	if resp.ResponseType != ResponseEphemeral {
+		t.Fatalf("ResponseType = %q, want %q", resp.ResponseType, ResponseEphemeral)
+	}
+	if resp.Text != "실행 완료" {
+		t.Fatalf("Text = %q", resp.Text)
+	}
+	if len(gateway.calls) != 1 {
+		t.Fatalf("gateway calls = %d, want 1", len(gateway.calls))
+	}
+	got := gateway.calls[0]
+	if got.Name != "오늘 작업 요약해줘" {
+		t.Fatalf("Name = %q, want arbitrary command text", got.Name)
+	}
+}
+
+func TestHandleReturnsUsageForEmptyCommand(t *testing.T) {
 	gateway := &fakeGateway{}
 	handler := NewHandler(Config{}, gateway)
 
-	resp := handler.Handle(context.Background(), SlashRequest{UserID: "user-a", Text: "unknown"})
+	resp := handler.Handle(context.Background(), SlashRequest{UserID: "user-a", Text: "   "})
 
 	if resp.ResponseType != ResponseEphemeral {
 		t.Fatalf("ResponseType = %q, want %q", resp.ResponseType, ResponseEphemeral)

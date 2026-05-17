@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"code.dltmdcks98.local/mattermost-hermes-slash-plugin/internal/command"
-	"code.dltmdcks98.local/mattermost-hermes-slash-plugin/internal/gateway"
+	"code.dltmdcks98.local/mattermost-plugin/hermes/internal/command"
+	"code.dltmdcks98.local/mattermost-plugin/hermes/internal/gateway"
 	"github.com/mattermost/mattermost/server/public/model"
 	"github.com/mattermost/mattermost/server/public/plugin"
 	"github.com/pkg/errors"
@@ -77,7 +77,7 @@ func buildHermesCommand() *model.Command {
 		Trigger:          pluginCommandTrigger,
 		AutoComplete:     true,
 		AutoCompleteDesc: "Hermes Agent API 명령 실행",
-		AutoCompleteHint: "compress",
+		AutoCompleteHint: "<명령어 또는 질문>",
 		DisplayName:      "Hermes",
 		Description:      "Hermes Agent API를 Mattermost에서 실행합니다.",
 	}

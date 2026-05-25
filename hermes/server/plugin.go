@@ -47,14 +47,38 @@ func (p *Plugin) OnConfigurationChange() error {
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	cfg := p.getConfiguration()
-	gw := gateway.NewClient(gateway.Config{BaseURL: cfg.HermesAgentAPIURL, Token: cfg.HermesAgentAPIKey, Model: cfg.HermesAgentModel}, nil)
-	handler := command.NewHandler(command.Config{AllowedUsers: parseCSV(cfg.AllowedUserIDs)}, gw)
+	req := commandRequestFromMattermostArgs(args)
+	allowedUsers := parseCSV(cfg.AllowedUserIDs)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	if !isUserAllowed(req.UserID, allowedUsers) {
+		return commandResponseToMattermostResponse(command.ResponseEphemeral, "권한이 없습니다. Hermes slash 명령을 실행할 수 없습니다."), nil
+	}
+	if strings.TrimSpace(req.Text) == "" {
+		return commandResponseToMattermostResponse(command.ResponseEphemeral, command.UsageText), nil
+	}
+
+	// Mattermost slash-command callbacks must return quickly. A full Hermes turn can
+	// take longer than Mattermost's command timeout and otherwise surfaces to users
+	// as a no-response error. Run the agent call asynchronously and deliver the
+	// result as an ephemeral post in the originating channel/thread.
+	go p.executeAndSendEphemeral(cfg, allowedUsers, req)
+
+	return commandResponseToMattermostResponse(command.ResponseEphemeral, "Hermes 명령을 접수했습니다. 완료되면 이 채널에 비공개 응답으로 전달합니다."), nil
+}
+
+func (p *Plugin) executeAndSendEphemeral(cfg *configuration, allowedUsers []string, req command.SlashRequest) {
+	gw := gateway.NewClient(gateway.Config{BaseURL: cfg.HermesAgentAPIURL, Token: cfg.HermesAgentAPIKey, Model: cfg.HermesAgentModel}, nil)
+	handler := command.NewHandler(command.Config{AllowedUsers: allowedUsers}, gw)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 
-	response := handler.Handle(ctx, commandRequestFromMattermostArgs(args))
-	return commandResponseToMattermostResponse(response.ResponseType, response.Text), nil
+	response := handler.Handle(ctx, req)
+	text := strings.TrimSpace(response.Text)
+	if text == "" {
+		text = "Hermes 명령이 완료되었습니다."
+	}
+	p.API.SendEphemeralPost(req.UserID, &model.Post{ChannelId: req.ChannelID, RootId: req.RootID, Message: text})
 }
 
 func (p *Plugin) getConfiguration() *configuration {
@@ -99,6 +123,18 @@ func commandResponseToMattermostResponse(responseType, text string) *model.Comma
 		responseType = model.CommandResponseTypeEphemeral
 	}
 	return &model.CommandResponse{ResponseType: responseType, Text: text}
+}
+
+func isUserAllowed(userID string, allowedUsers []string) bool {
+	if len(allowedUsers) == 0 {
+		return true
+	}
+	for _, allowed := range allowedUsers {
+		if allowed == userID {
+			return true
+		}
+	}
+	return false
 }
 
 func parseCSV(value string) []string {

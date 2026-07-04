@@ -46,3 +46,31 @@ func TestBuildHermesCommand(t *testing.T) {
 		t.Fatalf("AutoCompleteHint = %q", cmd.AutoCompleteHint)
 	}
 }
+
+func TestExecuteCommandReturnsUsageSynchronously(t *testing.T) {
+	plugin := &Plugin{}
+	plugin.setConfiguration(&configuration{})
+
+	got, appErr := plugin.ExecuteCommand(nil, &model.CommandArgs{UserId: "user-a", ChannelId: "channel-a", Command: "/hermes   "})
+	if appErr != nil {
+		t.Fatalf("ExecuteCommand appErr = %v", appErr)
+	}
+	if got.ResponseType != model.CommandResponseTypeEphemeral {
+		t.Fatalf("ResponseType = %q", got.ResponseType)
+	}
+	if got.Text != "사용법: /hermes <명령어 또는 질문>" {
+		t.Fatalf("Text = %q", got.Text)
+	}
+}
+
+func TestIsUserAllowed(t *testing.T) {
+	if !isUserAllowed("user-a", nil) {
+		t.Fatal("empty allowlist should allow all users")
+	}
+	if !isUserAllowed("user-a", []string{"user-b", "user-a"}) {
+		t.Fatal("matching user should be allowed")
+	}
+	if isUserAllowed("user-a", []string{"user-b"}) {
+		t.Fatal("non-matching user should be denied")
+	}
+}

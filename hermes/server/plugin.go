@@ -51,10 +51,10 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	allowedUsers := parseCSV(cfg.AllowedUserIDs)
 
 	if !isUserAllowed(req.UserID, allowedUsers) {
-		return commandResponseToMattermostResponse(command.ResponseEphemeral, "권한이 없습니다. Hermes slash 명령을 실행할 수 없습니다."), nil
+		return commandCardResponse("⛔ Hermes 권한 없음", "권한이 없습니다. Hermes slash 명령을 실행할 수 없습니다.", cardColorError, "AllowedUserIDs 설정을 확인하세요."), nil
 	}
 	if strings.TrimSpace(req.Text) == "" {
-		return commandResponseToMattermostResponse(command.ResponseEphemeral, command.UsageText), nil
+		return commandCardResponse("🤖 Hermes Slash Command", command.UsageText+"\n\n예: `/hermes 오늘 작업 요약해줘`", cardColorInfo, "승인 명령은 같은 Hermes 대화에서 `@hermes /approve`로 처리하세요."), nil
 	}
 
 	// Mattermost slash-command callbacks must return quickly. A full Hermes turn can
@@ -63,7 +63,12 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	// result as an ephemeral post in the originating channel/thread.
 	go p.executeAndSendEphemeral(cfg, allowedUsers, req)
 
-	return commandResponseToMattermostResponse(command.ResponseEphemeral, "Hermes 명령을 접수했습니다. 완료되면 이 채널에 비공개 응답으로 전달합니다."), nil
+	return commandCardResponse(
+		"⏳ Hermes 명령 접수",
+		acceptedCardText(req.Text),
+		cardColorInfo,
+		"완료 응답은 현재 채널/스레드에 비공개 카드로 표시됩니다.",
+	), nil
 }
 
 func (p *Plugin) executeAndSendEphemeral(cfg *configuration, allowedUsers []string, req command.SlashRequest) {
@@ -78,7 +83,14 @@ func (p *Plugin) executeAndSendEphemeral(cfg *configuration, allowedUsers []stri
 	if text == "" {
 		text = "Hermes 명령이 완료되었습니다."
 	}
-	p.API.SendEphemeralPost(req.UserID, &model.Post{ChannelId: req.ChannelID, RootId: req.RootID, Message: text})
+	color := cardColorSuccess
+	title := resultCardTitle(req.Text)
+	if strings.Contains(text, "실패") || strings.Contains(text, "권한") || strings.Contains(text, "오류") {
+		color = cardColorWarning
+		title = "⚠️ Hermes 응답 · 확인 필요"
+	}
+	post := postWithCard(req.ChannelID, req.RootID, text, title, color, "Hermes Mattermost slash plugin")
+	_ = p.API.SendEphemeralPost(req.UserID, post)
 }
 
 func (p *Plugin) getConfiguration() *configuration {

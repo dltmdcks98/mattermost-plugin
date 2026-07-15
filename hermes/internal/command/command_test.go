@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -111,6 +112,54 @@ func TestHandleReturnsUsageForEmptyCommand(t *testing.T) {
 	}
 	if len(gateway.calls) != 0 {
 		t.Fatalf("gateway was called %d times, want 0", len(gateway.calls))
+	}
+}
+
+func TestHandleBlocksGatewayOnlyApprovalCommands(t *testing.T) {
+	gateway := &fakeGateway{response: GatewayResult{Message: "should not be used"}}
+	handler := NewHandler(Config{}, gateway)
+
+	resp := handler.Handle(context.Background(), SlashRequest{UserID: "user-a", Text: " approve all "})
+
+	if resp.ResponseType != ResponseEphemeral {
+		t.Fatalf("ResponseType = %q, want %q", resp.ResponseType, ResponseEphemeral)
+	}
+	if len(gateway.calls) != 0 {
+		t.Fatalf("gateway was called %d times, want 0", len(gateway.calls))
+	}
+	for _, want := range []string{"Gateway", "@hermes /approve", "/hermes approve"} {
+		if !strings.Contains(resp.Text, want) {
+			t.Fatalf("Text missing %q: %s", want, resp.Text)
+		}
+	}
+}
+
+func TestHandleReturnsLocalHelpStatusAndSessionGuidance(t *testing.T) {
+	for _, tc := range []struct {
+		text string
+		want string
+	}{
+		{text: "help", want: "Hermes Mattermost Slash Plugin"},
+		{text: "status", want: "slash plugin is active"},
+		{text: "model", want: "모델 전환 안내"},
+		{text: "new", want: "새 세션 안내"},
+	} {
+		t.Run(tc.text, func(t *testing.T) {
+			gateway := &fakeGateway{response: GatewayResult{Message: "should not be used"}}
+			handler := NewHandler(Config{}, gateway)
+
+			resp := handler.Handle(context.Background(), SlashRequest{UserID: "user-a", Text: tc.text})
+
+			if resp.ResponseType != ResponseEphemeral {
+				t.Fatalf("ResponseType = %q, want %q", resp.ResponseType, ResponseEphemeral)
+			}
+			if len(gateway.calls) != 0 {
+				t.Fatalf("gateway was called %d times, want 0", len(gateway.calls))
+			}
+			if !strings.Contains(resp.Text, tc.want) {
+				t.Fatalf("Text missing %q: %s", tc.want, resp.Text)
+			}
+		})
 	}
 }
 

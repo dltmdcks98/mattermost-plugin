@@ -1,8 +1,10 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
+	"code.dltmdcks98.local/mattermost-plugin/hermes/internal/command"
 	"github.com/mattermost/mattermost/server/public/model"
 )
 
@@ -58,8 +60,11 @@ func TestExecuteCommandReturnsUsageSynchronously(t *testing.T) {
 	if got.ResponseType != model.CommandResponseTypeEphemeral {
 		t.Fatalf("ResponseType = %q", got.ResponseType)
 	}
-	if got.Text != "사용법: /hermes <명령어 또는 질문>" {
-		t.Fatalf("Text = %q", got.Text)
+	if !strings.Contains(got.Text, command.UsageText) {
+		t.Fatalf("Text = %q, want usage", got.Text)
+	}
+	if got.Props == nil {
+		t.Fatal("Props = nil, want card attachments")
 	}
 }
 

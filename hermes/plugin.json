@@ -1,12 +1,12 @@
 {
   "id": "dltmdcks98.hermes-slash-plugin",
   "name": "Hermes Slash Command Plugin",
-  "description": "Mattermost slash command plugin that bridges Mattermost commands to the Hermes Agent API server.",
+  "description": "Mattermost slash command plugin that bridges Mattermost commands to the Hermes Agent API server with card-style responses and gateway-command guidance.",
   "homepage_url": "http://192.168.50.20:3000/dltmdcks98/mattermost-plugin",
   "support_url": "http://192.168.50.20:3000/dltmdcks98/mattermost-plugin/issues",
   "release_notes_url": "http://192.168.50.20:3000/dltmdcks98/mattermost-plugin/releases",
   "icon_path": "assets/icon.svg",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "min_server_version": "9.0.0",
   "server": {
     "executables": {

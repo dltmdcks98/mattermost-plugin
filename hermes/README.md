@@ -8,6 +8,9 @@ Mattermost `/hermes` slash command를 Hermes Agent의 OpenAI-compatible API serv
 - Mattermost 사용자 allowlist 기반 권한 제어
 - Hermes Agent API `POST /v1/chat/completions` 호출
 - `X-Hermes-Session-Key`로 Mattermost channel/thread 기준 세션 스코프 전달
+- 접수/완료/오류 응답을 Mattermost attachment 카드 형태로 표시
+- `/hermes help`, `/hermes status`, `/hermes model`, `/hermes new` 로컬 안내 응답
+- `/hermes approve|deny|yolo`가 Gateway approval queue에 접근하지 못한다는 점을 명확히 안내
 - 실패 시 민감정보를 응답에 노출하지 않는 안전한 ephemeral 응답
 
 ## Hermes Agent API 사전 설정
